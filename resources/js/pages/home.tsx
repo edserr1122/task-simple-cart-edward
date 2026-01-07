@@ -9,7 +9,7 @@ import {
 import ShopLayout from '@/layouts/shop-layout';
 import { login } from '@/routes';
 import { type SharedData } from '@/types';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ShoppingCart } from 'lucide-react';
 
 interface Product {
@@ -70,6 +70,12 @@ export default function Home({ products }: HomeProps) {
                                             disabled={
                                                 product.stock_quantity === 0
                                             }
+                                            onClick={() => {
+                                                router.post('/cart/add', {
+                                                    product_id: product.id,
+                                                    quantity: 1,
+                                                });
+                                            }}
                                         >
                                             <ShoppingCart className="mr-2 h-4 w-4" />
                                             Add to Cart
