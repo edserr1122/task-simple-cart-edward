@@ -40,5 +40,16 @@ class Product extends Model
     {
         return $this->hasMany(CartItem::class);
     }
+
+    /**
+     * Check if the product is low in stock.
+     *
+     * @return bool
+     */
+    public function isLowStock(): bool
+    {
+        $threshold = config('products.low_stock_threshold', 10);
+        return $this->stock_quantity <= $threshold;
+    }
 }
 
