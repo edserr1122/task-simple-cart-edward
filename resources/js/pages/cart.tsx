@@ -131,6 +131,22 @@ export default function Cart({ cart }: CartProps) {
         }
     };
 
+    const handleClearCart = () => {
+        if (
+            confirm(
+                'Are you sure you want to clear your cart? This will remove all items.',
+            )
+        ) {
+            router.delete('/cart', {
+                onSuccess: () => {
+                    // Reset quantities state
+                    setQuantities({});
+                    setPreviousQuantities({});
+                },
+            });
+        }
+    };
+
     return (
         <ShopLayout>
             <Head title="Shopping Cart" />
@@ -328,7 +344,14 @@ export default function Cart({ cart }: CartProps) {
                                         </div>
                                     </div>
                                 </CardContent>
-                                <CardFooter>
+                                <CardFooter className="flex flex-col space-y-2">
+                                    <Button
+                                        variant="outline"
+                                        className="w-full"
+                                        onClick={handleClearCart}
+                                    >
+                                        Clear Cart
+                                    </Button>
                                     <Button className="w-full" size="lg">
                                         Proceed to Checkout
                                     </Button>

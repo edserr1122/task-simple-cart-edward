@@ -133,4 +133,19 @@ class CartController extends Controller
 
         return redirect()->route('cart.index')->with('success', 'Item removed from cart.');
     }
+
+    /**
+     * Clear all items from the cart.
+     */
+    public function clear()
+    {
+        $user = auth()->user();
+        $cart = $user->cart;
+
+        if ($cart) {
+            $cart->cartItems()->delete();
+        }
+
+        return redirect()->route('cart.index')->with('success', 'Cart cleared.');
+    }
 }

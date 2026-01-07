@@ -18,6 +18,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('cart/add', [CartController::class, 'add'])->name('cart.add');
     Route::patch('cart/{cartItem}', [CartController::class, 'update'])->name('cart.update');
     Route::delete('cart/{cartItem}', [CartController::class, 'remove'])->name('cart.remove');
+    Route::delete('cart', [CartController::class, 'clear'])->name('cart.clear');
 });
 
 require __DIR__.'/settings.php';
