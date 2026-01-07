@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Cart;
 use App\Models\CartItem;
+use App\Models\Order;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class CartController extends Controller
@@ -147,5 +149,54 @@ class CartController extends Controller
         }
 
         return redirect()->route('cart.index')->with('success', 'Cart cleared.');
+    }
+
+    /**
+     * Checkout and create order from cart.
+     */
+    public function checkout()
+    {
+        $user = auth()->user();
+        $cart = $user->cart;
+
+        if (! $cart || $cart->cartItems->isEmpty()) {
+            return redirect()->route('cart.index')->withErrors([
+                'cart' => 'Your cart is empty.',
+            ]);
+        }
+
+        $cart->load(['cartItems.product']);
+
+        // Validate stock availability
+        foreach ($cart->cartItems as $cartItem) {
+            if ($cartItem->product->stock_quantity < $cartItem->quantity) {
+                return redirect()->route('cart.index')->withErrors([
+                    'stock' => "Insufficient stock for {$cartItem->product->name}. Only {$cartItem->product->stock_quantity} available.",
+                ]);
+            }
+        }
+
+        // Create order and order items, and reduce stock
+        DB::transaction(function () use ($cart, $user) {
+            $order = Order::create([
+                'user_id' => $user->id,
+            ]);
+
+            foreach ($cart->cartItems as $cartItem) {
+                $order->orderItems()->create([
+                    'product_id' => $cartItem->product_id,
+                    'quantity' => $cartItem->quantity,
+                    'price' => $cartItem->product->price,
+                ]);
+
+                // Reduce stock
+                $cartItem->product->decrement('stock_quantity', $cartItem->quantity);
+            }
+
+            // Clear cart
+            $cart->cartItems()->delete();
+        });
+
+        return redirect()->route('cart.index')->with('success', 'Order placed successfully!');
     }
 }

@@ -381,7 +381,32 @@ export default function Cart({ cart }: CartProps) {
                                     >
                                         Clear Cart
                                     </Button>
-                                    <Button className="w-full" size="lg">
+                                    <Button
+                                        className="w-full"
+                                        size="lg"
+                                        onClick={() => {
+                                            router.post(
+                                                cartRoutes.checkout().url,
+                                                {},
+                                                {
+                                                    onSuccess: () => {
+                                                        toast.success(
+                                                            'Order placed successfully!',
+                                                        );
+                                                    },
+                                                    onError: (errors) => {
+                                                        const errorMessage =
+                                                            errors.stock ||
+                                                            errors.cart ||
+                                                            'Failed to checkout. Please try again.';
+                                                        toast.error(
+                                                            errorMessage,
+                                                        );
+                                                    },
+                                                },
+                                            );
+                                        }}
+                                    >
                                         Proceed to Checkout
                                     </Button>
                                 </CardFooter>
