@@ -7,6 +7,7 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import ShopLayout from '@/layouts/shop-layout';
+import { formatCurrency } from '@/lib/utils';
 import { login } from '@/routes';
 import { type SharedData } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
@@ -48,10 +49,7 @@ export default function Home({ products }: HomeProps) {
                                 <CardContent className="flex-1">
                                     <div className="space-y-2">
                                         <p className="text-2xl font-bold">
-                                            $
-                                            {parseFloat(product.price).toFixed(
-                                                2,
-                                            )}
+                                            {formatCurrency(product.price)}
                                         </p>
                                         <p className="text-sm text-muted-foreground">
                                             Stock: {product.stock_quantity}

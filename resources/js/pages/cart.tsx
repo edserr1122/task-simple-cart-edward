@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import ShopLayout from '@/layouts/shop-layout';
+import { formatCurrency } from '@/lib/utils';
 import cartRoutes from '@/routes/cart';
 import { Head, router } from '@inertiajs/react';
 import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
@@ -179,16 +180,16 @@ export default function Cart({ cart }: CartProps) {
                                             <div className="flex items-center justify-between">
                                                 <div>
                                                     <p className="text-sm text-muted-foreground">
-                                                        Price: $
-                                                        {parseFloat(
+                                                        Price:{' '}
+                                                        {formatCurrency(
                                                             item.product_price,
-                                                        ).toFixed(2)}
+                                                        )}
                                                     </p>
                                                     <p className="mt-1 text-lg font-semibold">
-                                                        Subtotal: $
-                                                        {parseFloat(
+                                                        Subtotal:{' '}
+                                                        {formatCurrency(
                                                             item.subtotal,
-                                                        ).toFixed(2)}
+                                                        )}
                                                     </p>
                                                 </div>
                                                 <div className="flex items-center space-x-2">
@@ -305,27 +306,23 @@ export default function Cart({ cart }: CartProps) {
                                                 )
                                             </span>
                                             <span>
-                                                $
-                                                {cart.items
-                                                    .reduce(
+                                                {formatCurrency(
+                                                    cart.items.reduce(
                                                         (sum, item) =>
                                                             sum +
                                                             parseFloat(
                                                                 item.subtotal,
                                                             ),
                                                         0,
-                                                    )
-                                                    .toFixed(2)}
+                                                    ),
+                                                )}
                                             </span>
                                         </div>
                                         <div className="border-t pt-4">
                                             <div className="flex justify-between text-lg font-bold">
                                                 <span>Total</span>
                                                 <span>
-                                                    $
-                                                    {parseFloat(
-                                                        cart.total,
-                                                    ).toFixed(2)}
+                                                    {formatCurrency(cart.total)}
                                                 </span>
                                             </div>
                                         </div>
