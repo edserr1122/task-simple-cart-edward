@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import ShopLayout from '@/layouts/shop-layout';
+import cartRoutes from '@/routes/cart';
 import { Head, router } from '@inertiajs/react';
 import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
 import { useState } from 'react';
@@ -48,16 +49,25 @@ export default function Cart({ cart }: CartProps) {
     };
 
     const handleUpdateQuantity = (itemId: number) => {
-        router.patch(cart().update({ cartItem: itemId }).url, {
-            quantity: quantities[itemId],
-        });
+        router.patch(
+            cartRoutes.update({ cartItem: itemId }).url,
+            {
+                quantity: quantities[itemId],
+            },
+            {
+                preserveScroll: true,
+                onError: (errors) => {
+                    console.error('Error updating cart:', errors);
+                },
+            },
+        );
     };
 
     const handleRemove = (itemId: number) => {
         if (
             confirm('Are you sure you want to remove this item from your cart?')
         ) {
-            router.delete(cart().remove({ cartItem: itemId }).url);
+            router.delete(cartRoutes.remove({ cartItem: itemId }).url);
         }
     };
 
