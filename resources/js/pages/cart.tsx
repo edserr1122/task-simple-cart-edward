@@ -1,3 +1,13 @@
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import {
     Card,
@@ -13,6 +23,7 @@ import cartRoutes from '@/routes/cart';
 import { Head, router } from '@inertiajs/react';
 import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 interface CartItem {
     id: number;
@@ -55,6 +66,9 @@ export default function Cart({ cart }: CartProps) {
             {} as Record<number, number>,
         ),
     );
+    const [removeDialogOpen, setRemoveDialogOpen] = useState(false);
+    const [removeItemId, setRemoveItemId] = useState<number | null>(null);
+    const [clearCartDialogOpen, setClearCartDialogOpen] = useState(false);
 
     const handleQuantityChange = (itemId: number, newQuantity: number) => {
         if (newQuantity < 1) return;
@@ -85,7 +99,9 @@ export default function Cart({ cart }: CartProps) {
                 ...prev,
                 [itemId]: previousQuantities[itemId],
             }));
-            alert(`Only ${cartItem.stock_quantity} items available in stock.`);
+            toast.warning(
+                `Only ${cartItem.stock_quantity} items available in stock.`,
+            );
             return;
         }
 
@@ -117,35 +133,48 @@ export default function Cart({ cart }: CartProps) {
                     const errorMessage =
                         errors.quantity ||
                         'Failed to update quantity. Please try again.';
-                    alert(errorMessage);
+                    toast.error(errorMessage);
                 },
             },
         );
     };
 
     const handleRemove = (itemId: number) => {
-        if (
-            confirm('Are you sure you want to remove this item from your cart?')
-        ) {
-            router.delete(cartRoutes.remove({ cartItem: itemId }).url);
-        }
+        setRemoveItemId(itemId);
+        setRemoveDialogOpen(true);
     };
 
-    const handleClearCart = () => {
-        if (
-            confirm(
-                'Are you sure you want to clear your cart? This will remove all items.',
-            )
-        ) {
-            router.delete('/cart', {
+    const confirmRemove = () => {
+        if (removeItemId !== null) {
+            router.delete(cartRoutes.remove({ cartItem: removeItemId }).url, {
                 onSuccess: () => {
-                    // Reset quantities state
-                    setQuantities({});
-                    setPreviousQuantities({});
+                    toast.success('Item removed from cart');
                 },
             });
         }
+        setRemoveDialogOpen(false);
+        setRemoveItemId(null);
     };
+
+    const handleClearCart = () => {
+        setClearCartDialogOpen(true);
+    };
+
+    const confirmClearCart = () => {
+        router.delete('/cart', {
+            onSuccess: () => {
+                // Reset quantities state
+                setQuantities({});
+                setPreviousQuantities({});
+                toast.success('Cart cleared');
+            },
+        });
+        setClearCartDialogOpen(false);
+    };
+
+    const itemToRemove = removeItemId
+        ? cart.items.find((item) => item.id === removeItemId)
+        : null;
 
     return (
         <ShopLayout>
@@ -273,7 +302,7 @@ export default function Cart({ cart }: CartProps) {
                                                                 newQuantity >
                                                                 item.stock_quantity
                                                             ) {
-                                                                alert(
+                                                                toast.warning(
                                                                     `Only ${item.stock_quantity} items available in stock.`,
                                                                 );
                                                                 return;
@@ -361,6 +390,65 @@ export default function Cart({ cart }: CartProps) {
                     </div>
                 )}
             </div>
+
+            {/* Remove Item Confirmation Dialog */}
+            <AlertDialog
+                open={removeDialogOpen}
+                onOpenChange={setRemoveDialogOpen}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Remove Item</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to remove{' '}
+                            <strong>
+                                {itemToRemove?.product_name || 'this item'}
+                            </strong>{' '}
+                            from your cart? This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel
+                            onClick={() => {
+                                setRemoveItemId(null);
+                            }}
+                        >
+                            Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={confirmRemove}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            Remove
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Clear Cart Confirmation Dialog */}
+            <AlertDialog
+                open={clearCartDialogOpen}
+                onOpenChange={setClearCartDialogOpen}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Clear Cart</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to clear your cart? This will
+                            remove all items and cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={confirmClearCart}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            Clear Cart
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </ShopLayout>
     );
 }

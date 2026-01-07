@@ -12,6 +12,7 @@ import { login } from '@/routes';
 import { type SharedData } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import { ShoppingCart } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Product {
     id: number;
@@ -69,10 +70,27 @@ export default function Home({ products }: HomeProps) {
                                                 product.stock_quantity === 0
                                             }
                                             onClick={() => {
-                                                router.post('/cart/add', {
-                                                    product_id: product.id,
-                                                    quantity: 1,
-                                                });
+                                                router.post(
+                                                    '/cart/add',
+                                                    {
+                                                        product_id: product.id,
+                                                        quantity: 1,
+                                                    },
+                                                    {
+                                                        preserveScroll: true,
+                                                        onSuccess: () => {
+                                                            toast.success(
+                                                                'Product added to cart',
+                                                            );
+                                                        },
+                                                        onError: (errors) => {
+                                                            toast.error(
+                                                                errors.quantity ||
+                                                                    'Failed to add product to cart',
+                                                            );
+                                                        },
+                                                    },
+                                                );
                                             }}
                                         >
                                             <ShoppingCart className="mr-2 h-4 w-4" />
