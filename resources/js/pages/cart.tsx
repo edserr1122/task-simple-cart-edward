@@ -18,6 +18,7 @@ interface CartItem {
     product_id: number;
     product_name: string;
     product_price: string;
+    stock_quantity: number;
     quantity: number;
     subtotal: string;
 }
@@ -42,22 +43,80 @@ export default function Cart({ cart }: CartProps) {
             {} as Record<number, number>,
         ),
     );
+    const [previousQuantities, setPreviousQuantities] = useState<
+        Record<number, number>
+    >(
+        cart.items.reduce(
+            (acc, item) => {
+                acc[item.id] = item.quantity;
+                return acc;
+            },
+            {} as Record<number, number>,
+        ),
+    );
 
     const handleQuantityChange = (itemId: number, newQuantity: number) => {
         if (newQuantity < 1) return;
         setQuantities((prev) => ({ ...prev, [itemId]: newQuantity }));
     };
 
-    const handleUpdateQuantity = (itemId: number) => {
+    const handleUpdateQuantity = (itemId: number, newQuantity?: number) => {
+        const quantity =
+            newQuantity !== undefined
+                ? newQuantity
+                : parseInt(String(quantities[itemId]), 10);
+
+        if (isNaN(quantity) || quantity < 1) {
+            console.error('Invalid quantity:', quantity);
+            // Reset to previous valid quantity
+            setQuantities((prev) => ({
+                ...prev,
+                [itemId]: previousQuantities[itemId],
+            }));
+            return;
+        }
+
+        // Find the cart item to check stock
+        const cartItem = cart.items.find((item) => item.id === itemId);
+        if (cartItem && quantity > cartItem.stock_quantity) {
+            // Reset to previous valid quantity
+            setQuantities((prev) => ({
+                ...prev,
+                [itemId]: previousQuantities[itemId],
+            }));
+            alert(`Only ${cartItem.stock_quantity} items available in stock.`);
+            return;
+        }
+
+        const url = `/cart/${itemId}`;
+
         router.patch(
-            cartRoutes.update({ cartItem: itemId }).url,
+            url,
             {
-                quantity: quantities[itemId],
+                quantity: quantity,
             },
             {
                 preserveScroll: true,
+                onSuccess: () => {
+                    // Update previous quantity on success
+                    setPreviousQuantities((prev) => ({
+                        ...prev,
+                        [itemId]: quantity,
+                    }));
+                    // Force reload to get fresh data
+                    router.reload({ only: ['cart'] });
+                },
                 onError: (errors) => {
                     console.error('Error updating cart:', errors);
+                    // Reset to previous valid quantity on error
+                    setQuantities((prev) => ({
+                        ...prev,
+                        [itemId]: previousQuantities[itemId],
+                    }));
+                    const errorMessage =
+                        errors.quantity ||
+                        'Failed to update quantity. Please try again.';
+                    alert(errorMessage);
                 },
             },
         );
@@ -136,14 +195,24 @@ export default function Cart({ cart }: CartProps) {
                                                     <Button
                                                         variant="outline"
                                                         size="icon"
-                                                        onClick={() =>
-                                                            handleQuantityChange(
-                                                                item.id,
+                                                        onClick={() => {
+                                                            const newQuantity =
                                                                 quantities[
                                                                     item.id
-                                                                ] - 1,
-                                                            )
-                                                        }
+                                                                ] - 1;
+                                                            if (
+                                                                newQuantity >= 1
+                                                            ) {
+                                                                handleQuantityChange(
+                                                                    item.id,
+                                                                    newQuantity,
+                                                                );
+                                                                handleUpdateQuantity(
+                                                                    item.id,
+                                                                    newQuantity,
+                                                                );
+                                                            }
+                                                        }}
                                                         disabled={
                                                             quantities[
                                                                 item.id
@@ -177,13 +246,35 @@ export default function Cart({ cart }: CartProps) {
                                                     <Button
                                                         variant="outline"
                                                         size="icon"
-                                                        onClick={() =>
-                                                            handleQuantityChange(
-                                                                item.id,
+                                                        onClick={() => {
+                                                            const newQuantity =
                                                                 quantities[
                                                                     item.id
-                                                                ] + 1,
-                                                            )
+                                                                ] + 1;
+                                                            // Check stock before allowing increase
+                                                            if (
+                                                                newQuantity >
+                                                                item.stock_quantity
+                                                            ) {
+                                                                alert(
+                                                                    `Only ${item.stock_quantity} items available in stock.`,
+                                                                );
+                                                                return;
+                                                            }
+                                                            handleQuantityChange(
+                                                                item.id,
+                                                                newQuantity,
+                                                            );
+                                                            handleUpdateQuantity(
+                                                                item.id,
+                                                                newQuantity,
+                                                            );
+                                                        }}
+                                                        disabled={
+                                                            quantities[
+                                                                item.id
+                                                            ] >=
+                                                            item.stock_quantity
                                                         }
                                                     >
                                                         <Plus className="h-4 w-4" />
@@ -205,7 +296,13 @@ export default function Cart({ cart }: CartProps) {
                                     <div className="space-y-4">
                                         <div className="flex justify-between text-sm">
                                             <span className="text-muted-foreground">
-                                                Items ({cart.items.length})
+                                                Items (
+                                                {cart.items.reduce(
+                                                    (sum, item) =>
+                                                        sum + item.quantity,
+                                                    0,
+                                                )}
+                                                )
                                             </span>
                                             <span>
                                                 $
