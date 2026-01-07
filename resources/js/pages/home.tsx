@@ -7,10 +7,12 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import ShopLayout from '@/layouts/shop-layout';
+import { formatCurrency } from '@/lib/utils';
 import { login } from '@/routes';
 import { type SharedData } from '@/types';
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { ShoppingCart } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Product {
     id: number;
@@ -48,10 +50,7 @@ export default function Home({ products }: HomeProps) {
                                 <CardContent className="flex-1">
                                     <div className="space-y-2">
                                         <p className="text-2xl font-bold">
-                                            $
-                                            {parseFloat(product.price).toFixed(
-                                                2,
-                                            )}
+                                            {formatCurrency(product.price)}
                                         </p>
                                         <p className="text-sm text-muted-foreground">
                                             Stock: {product.stock_quantity}
@@ -64,26 +63,41 @@ export default function Home({ products }: HomeProps) {
                                     </div>
                                 </CardContent>
                                 <CardFooter>
-                                    {auth.user ? (
-                                        <Button
-                                            className="w-full"
-                                            disabled={
-                                                product.stock_quantity === 0
+                                    <Button
+                                        className="w-full"
+                                        disabled={product.stock_quantity === 0}
+                                        onClick={() => {
+                                            if (!auth.user) {
+                                                router.visit(login());
+                                                return;
                                             }
-                                        >
-                                            <ShoppingCart className="mr-2 h-4 w-4" />
-                                            Add to Cart
-                                        </Button>
-                                    ) : (
-                                        <Link href={login()} className="w-full">
-                                            <Button
-                                                className="w-full"
-                                                variant="outline"
-                                            >
-                                                Log in to Add to Cart
-                                            </Button>
-                                        </Link>
-                                    )}
+
+                                            router.post(
+                                                '/cart/add',
+                                                {
+                                                    product_id: product.id,
+                                                    quantity: 1,
+                                                },
+                                                {
+                                                    preserveScroll: true,
+                                                    onSuccess: () => {
+                                                        toast.success(
+                                                            'Product added to cart',
+                                                        );
+                                                    },
+                                                    onError: (errors) => {
+                                                        toast.error(
+                                                            errors.quantity ||
+                                                                'Failed to add product to cart',
+                                                        );
+                                                    },
+                                                },
+                                            );
+                                        }}
+                                    >
+                                        <ShoppingCart className="mr-2 h-4 w-4" />
+                                        Add to Cart
+                                    </Button>
                                 </CardFooter>
                             </Card>
                         ))}
