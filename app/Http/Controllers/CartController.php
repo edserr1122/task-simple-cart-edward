@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SendLowStockNotification;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 
 class CartController extends Controller
@@ -88,6 +90,9 @@ class CartController extends Controller
             ]);
         }
 
+        // Check for low stock and send notification if needed
+        $this->checkAndNotifyLowStock($product);
+
         return back()->with('success', 'Product added to cart.');
     }
 
@@ -115,6 +120,9 @@ class CartController extends Controller
         }
 
         $cartItem->update(['quantity' => $request->quantity]);
+
+        // Check for low stock and send notification if needed
+        $this->checkAndNotifyLowStock($product);
 
         return redirect()->route('cart.index')->with('success', 'Cart updated.');
     }
@@ -147,5 +155,33 @@ class CartController extends Controller
         }
 
         return redirect()->route('cart.index')->with('success', 'Cart cleared.');
+    }
+
+    /**
+     * Check if product is low in stock and dispatch notification if needed.
+     */
+    private function checkAndNotifyLowStock(Product $product): void
+    {
+        // Refresh product to get latest stock
+        $product->refresh();
+
+        // Check if product is low in stock
+        if (! $product->isLowStock()) {
+            // Clear notification cache if stock is back above threshold
+            Cache::forget("low_stock_notified_{$product->id}");
+            return;
+        }
+
+        // Check if notification was already sent (prevent duplicates)
+        $cacheKey = "low_stock_notified_{$product->id}";
+        if (Cache::has($cacheKey)) {
+            return;
+        }
+
+        // Dispatch job to send notification
+        SendLowStockNotification::dispatch($product);
+
+        // Cache the notification for 8 hours to prevent duplicates
+        Cache::put($cacheKey, true, now()->addHours(8));
     }
 }
