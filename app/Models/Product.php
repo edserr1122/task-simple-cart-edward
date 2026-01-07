@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
+use App\Observers\ProductObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+#[ObservedBy([ProductObserver::class])]
 class Product extends Model
 {
     use HasFactory;
@@ -39,6 +42,17 @@ class Product extends Model
     public function cartItems()
     {
         return $this->hasMany(CartItem::class);
+    }
+
+    /**
+     * Check if the product is low in stock.
+     *
+     * @return bool
+     */
+    public function isLowStock(): bool
+    {
+        $threshold = config('products.low_stock_threshold', 10);
+        return $this->stock_quantity <= $threshold;
     }
 }
 
