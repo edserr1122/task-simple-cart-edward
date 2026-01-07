@@ -8,6 +8,7 @@ import {
 import { UserMenuContent } from '@/components/user-menu-content';
 import { useInitials } from '@/hooks/use-initials';
 import { home, login, register } from '@/routes';
+import cart from '@/routes/cart';
 import { type SharedData } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
 import { ShoppingCart } from 'lucide-react';
@@ -15,7 +16,7 @@ import AppLogo from './app-logo';
 
 export function ShopNavbar() {
     const page = usePage<SharedData>();
-    const { auth } = page.props;
+    const { auth, cartItemCount } = page.props;
     const getInitials = useInitials();
 
     return (
@@ -33,13 +34,20 @@ export function ShopNavbar() {
                 {/* Navigation Items */}
                 <div className="flex items-center space-x-4">
                     {auth.user && (
-                        <Link href="/cart" prefetch>
+                        <Link href={cart.index().url} prefetch>
                             <Button
                                 variant="ghost"
                                 size="icon"
                                 className="relative"
                             >
                                 <ShoppingCart className="h-5 w-5" />
+                                {cartItemCount > 0 && (
+                                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                                        {cartItemCount > 99
+                                            ? '99+'
+                                            : cartItemCount}
+                                    </span>
+                                )}
                             </Button>
                         </Link>
                     )}
