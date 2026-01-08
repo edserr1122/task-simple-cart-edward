@@ -25,7 +25,7 @@ export function ShopNavbar() {
                 {/* Logo */}
                 <Link
                     href={home()}
-                    prefetch
+                    prefetch={false}
                     className="flex items-center space-x-2"
                 >
                     <AppLogo />
@@ -34,7 +34,7 @@ export function ShopNavbar() {
                 {/* Navigation Items */}
                 <div className="flex items-center space-x-4">
                     {auth.user && (
-                        <Link href={cart.index().url} prefetch>
+                        <Link href={cart.index().url} prefetch={false}>
                             <Button
                                 variant="ghost"
                                 size="icon"

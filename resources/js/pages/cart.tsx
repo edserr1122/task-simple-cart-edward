@@ -120,8 +120,8 @@ export default function Cart({ cart }: CartProps) {
                         ...prev,
                         [itemId]: quantity,
                     }));
-                    // Force reload to get fresh data
-                    router.reload({ only: ['cart'] });
+                    // The redirect in the controller will refresh the page with fresh data
+                    // No need for router.reload() since redirect already handles it
                 },
                 onError: (errors) => {
                     console.error('Error updating cart:', errors);
@@ -149,6 +149,8 @@ export default function Cart({ cart }: CartProps) {
             router.delete(cartRoutes.remove({ cartItem: removeItemId }).url, {
                 onSuccess: () => {
                     toast.success('Item removed from cart');
+                    // Reload shared props to update cart count
+                    router.reload({ only: ['cart', 'cartItemCount'] });
                 },
             });
         }
@@ -167,6 +169,8 @@ export default function Cart({ cart }: CartProps) {
                 setQuantities({});
                 setPreviousQuantities({});
                 toast.success('Cart cleared');
+                // Reload shared props to update cart count
+                router.reload({ only: ['cart', 'cartItemCount'] });
             },
         });
         setClearCartDialogOpen(false);
@@ -393,6 +397,13 @@ export default function Cart({ cart }: CartProps) {
                                                         toast.success(
                                                             'Order placed successfully!',
                                                         );
+                                                        // Reload shared props to update cart count
+                                                        router.reload({
+                                                            only: [
+                                                                'cart',
+                                                                'cartItemCount',
+                                                            ],
+                                                        });
                                                     },
                                                     onError: (errors) => {
                                                         const errorMessage =

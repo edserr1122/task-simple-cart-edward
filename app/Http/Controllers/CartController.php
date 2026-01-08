@@ -18,12 +18,17 @@ class CartController extends Controller
     public function index()
     {
         $user = auth()->user();
+        
+        // Clear relationship cache to ensure fresh data
+        $user->unsetRelation('cart');
         $cart = $user->cart;
 
         if (! $cart) {
             $cart = Cart::create(['user_id' => $user->id]);
         }
 
+        // Refresh cart items to get latest data
+        $cart->unsetRelation('cartItems');
         $cart->load(['cartItems.product']);
 
         return Inertia::render('cart', [
@@ -118,6 +123,10 @@ class CartController extends Controller
 
         $cartItem->update(['quantity' => $request->quantity]);
 
+        // Clear relationship cache to ensure fresh data on next request
+        $cartItem->cart->unsetRelation('cartItems');
+        auth()->user()->unsetRelation('cart');
+
         return redirect()->route('cart.index')->with('success', 'Cart updated.');
     }
 
@@ -142,6 +151,9 @@ class CartController extends Controller
     public function clear()
     {
         $user = auth()->user();
+        
+        // Clear relationship cache to ensure fresh data
+        $user->unsetRelation('cart');
         $cart = $user->cart;
 
         if ($cart) {

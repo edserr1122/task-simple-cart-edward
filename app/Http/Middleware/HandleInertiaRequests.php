@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\CartItem;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -41,10 +42,10 @@ class HandleInertiaRequests extends Middleware
         $cartItemCount = 0;
         $user = $request->user();
         if ($user) {
-            $cart = $user->cart;
-            if ($cart) {
-                $cartItemCount = $cart->cartItems()->sum('quantity');
-            }
+            // Always fetch fresh cart count from database
+            $cartItemCount = CartItem::whereHas('cart', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })->sum('quantity');
         }
 
         return [
