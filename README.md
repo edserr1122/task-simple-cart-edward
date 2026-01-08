@@ -1,29 +1,122 @@
-# Requirements
+# Simple E-commerce Shopping Cart
 
-Project: Simple E-commerce Shopping Cart
+A simple e-commerce shopping cart system built with Laravel, React, and Tailwind CSS.
 
-Create a project for a simple e-commerce shopping cart system. Users should be able to browse products, add them to a cart, update quantities, and remove items. Each product should have a name, price, and stock_quantity.
+## Features
 
-Each shopping cart must be associated with the authenticated user (User model).
-When a user adds products to their cart, updates quantities, or removes items, these actions should be stored and retrieved based on the currently authenticated user (not via session or local storage).
-Make sure to use Laravel’s built-in authentication from the starter kit.
+- Browse products with stock information
+- Add products to cart (authenticated users only)
+- Update cart item quantities
+- Remove items from cart
+- Clear entire cart
+- Checkout to create orders
+- Low stock email notifications (via Laravel Jobs/Queues)
+- Daily sales report emails (scheduled job)
 
-Keep it simple and follow laravel best practices and guidelines.
+## Tech Stack
 
-Tech Stack:
+- **Backend**: Laravel 12
+- **Frontend**: React + Inertia.js
+- **Styling**: Tailwind CSS + Shadcn UI
+- **Database**: SQLite (default)
 
-Backend: Laravel
+## Setup
 
-Frontend: React, Vue or Livewire
+### Prerequisites
 
-Styling: Tailwind CSS
+- PHP 8.2 or higher
+- Composer
+- Node.js 18+ and npm
 
-Version Control: Git/GitHub
+### Installation
 
-Key Requirements:
+1. Clone the repository:
 
-Low Stock Notification: When a product's stock is running low, a Laravel Job/Queue should be triggered to send an email to a dummy admin user.
+```bash
+git clone <repository-url>
+cd task-simple-cart-edward
+```
 
-Daily Sales Report: Implement a scheduled job (cron) that runs every evening and sends a report of all products sold that day to the email of the dummy admin user.
+2. Install PHP dependencies:
 
-Submission: Please host the code on GitHub and add @dylanmichaelryan as a collaborator to the repository.
+```bash
+composer install
+```
+
+3. Install Node.js dependencies:
+
+```bash
+npm install
+```
+
+4. Copy environment file:
+
+```bash
+cp .env.example .env
+```
+
+5. Generate application key:
+
+```bash
+php artisan key:generate
+```
+
+6. Configure environment variables (optional):
+   Edit `.env` and set:
+
+```env
+LOW_STOCK_THRESHOLD=10
+ADMIN_EMAIL=admin@example.com
+```
+
+7. Run migrations and seed database:
+
+```bash
+php artisan migrate
+php artisan db:seed
+```
+
+This will create:
+
+- 60 sample products
+- A test user (email: `comgeek71@gmail.com`, password: `password`)
+
+## Running the Application
+
+Start the development server:
+
+```bash
+composer run dev
+```
+
+This command runs the following processes concurrently:
+
+- Laravel development server (`php artisan serve`)
+- Vite development server (`npm run dev`)
+- Queue worker (`php artisan queue:listen`) - for processing email notifications
+- Scheduler (`php artisan schedule:work`) - for daily sales reports
+
+Visit the application:
+
+- Open http://localhost:8000 in your browser
+
+## Testing
+
+Run the test suite:
+
+```bash
+php artisan test
+```
+
+## Additional Commands
+
+Generate daily sales report manually:
+
+```bash
+php artisan sales:generate-daily-report
+```
+
+## Default Test User
+
+- **Email**: comgeek71@gmail.com
+- **Password**: password

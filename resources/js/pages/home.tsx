@@ -84,6 +84,12 @@ export default function Home({ products }: HomeProps) {
                                                         toast.success(
                                                             'Product added to cart',
                                                         );
+                                                        // Reload shared props to update cart count
+                                                        router.reload({
+                                                            only: [
+                                                                'cartItemCount',
+                                                            ],
+                                                        });
                                                     },
                                                     onError: (errors) => {
                                                         toast.error(
