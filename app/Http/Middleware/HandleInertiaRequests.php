@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\CartItem;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -38,6 +39,15 @@ class HandleInertiaRequests extends Middleware
     {
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
 
+        $cartItemCount = 0;
+        $user = $request->user();
+        if ($user) {
+            // Always fetch fresh cart count from database
+            $cartItemCount = CartItem::whereHas('cart', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })->sum('quantity');
+        }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -45,6 +55,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'cartItemCount' => $cartItemCount,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

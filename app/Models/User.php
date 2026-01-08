@@ -49,4 +49,20 @@ class User extends Authenticatable
             'two_factor_confirmed_at' => 'datetime',
         ];
     }
+
+    /**
+     * Get the cart for the user.
+     */
+    public function cart()
+    {
+        return $this->hasOne(Cart::class);
+    }
+
+    /**
+     * Get the orders for the user.
+     */
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
 }
